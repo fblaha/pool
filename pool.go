@@ -12,8 +12,8 @@ type Worker interface {
 // WorkerFunc does the work
 type WorkerFunc func()
 
-// PoolExecutor distributes works to the pool of goroutines
-type PoolExecutor struct {
+// Executor distributes works to the pool of goroutines
+type Executor struct {
 	// tracks completion of submitted work
 	workWG sync.WaitGroup
 	// tracks pool goroutines which process the incoming work
@@ -22,10 +22,10 @@ type PoolExecutor struct {
 	todo chan WorkerFunc
 }
 
-// NewPoolExecutor constructor
-func NewPoolExecutor(concurrency int) *PoolExecutor {
+// NewExecutor constructor
+func NewExecutor(concurrency int) *Executor {
 	todo := make(chan WorkerFunc)
-	executor := PoolExecutor{todo: todo}
+	executor := Executor{todo: todo}
 	for i := 0; i < concurrency; i++ {
 		executor.poolWG.Add(1)
 		go executor.handleWork()
@@ -33,7 +33,7 @@ func NewPoolExecutor(concurrency int) *PoolExecutor {
 	return &executor
 }
 
-func (e *PoolExecutor) handleWork() {
+func (e *Executor) handleWork() {
 	defer e.poolWG.Done()
 	for w := range e.todo {
 		w()
@@ -42,7 +42,7 @@ func (e *PoolExecutor) handleWork() {
 }
 
 // SubmitFunc submits the work for execution
-func (e *PoolExecutor) SubmitFunc(workers ...WorkerFunc) {
+func (e *Executor) SubmitFunc(workers ...WorkerFunc) {
 	for _, w := range workers {
 		// ensures that shutdown waits for completion of submitted work
 		e.workWG.Add(1)
@@ -52,7 +52,7 @@ func (e *PoolExecutor) SubmitFunc(workers ...WorkerFunc) {
 }
 
 // Submit submits the work for execution
-func (e *PoolExecutor) Submit(workers ...Worker) {
+func (e *Executor) Submit(workers ...Worker) {
 	for _, w := range workers {
 		e.SubmitFunc(w.Work)
 	}
@@ -60,7 +60,7 @@ func (e *PoolExecutor) Submit(workers ...Worker) {
 
 // ShutdownGracefully waits for completion of the submitted work and terminates worker goroutines
 // and frees allocated resources. The executor can no longer be used after this call.
-func (e *PoolExecutor) ShutdownGracefully() {
+func (e *Executor) ShutdownGracefully() {
 	// waits for completion of submitted work
 	e.Wait()
 	close(e.todo)
@@ -69,6 +69,6 @@ func (e *PoolExecutor) ShutdownGracefully() {
 }
 
 // Wait waits for completion of the submitted work
-func (e *PoolExecutor) Wait() {
+func (e *Executor) Wait() {
 	e.workWG.Wait()
 }

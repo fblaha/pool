@@ -6,7 +6,7 @@ import (
 )
 
 func TestExecutorStartShutdown(t *testing.T) {
-	executor := NewPoolExecutor(10)
+	executor := NewExecutor(10)
 	executor.ShutdownGracefully()
 }
 
@@ -19,7 +19,7 @@ func (w *mockWork) Work() {
 }
 
 func TestExecutorSubmit(t *testing.T) {
-	executor := NewPoolExecutor(10)
+	executor := NewExecutor(10)
 	defer executor.ShutdownGracefully()
 	var work mockWork
 	work.Add(100)

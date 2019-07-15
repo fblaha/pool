@@ -4,12 +4,13 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"fmt"
-	"github.com/fblaha/pool"
 	"hash"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/fblaha/pool"
 )
 
 // hashFactory factory function for hashes
@@ -74,7 +75,7 @@ func Example() {
 	go func() {
 		// constructs an executor with a single goroutine (only to have deterministic output in console)
 		// a real world usage will probably use a higher number
-		executor := pool.NewPoolExecutor(1)
+		executor := pool.NewExecutor(1)
 		testDir := filepath.Join("testdata")
 
 		// read files from the testdata dir
