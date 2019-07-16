@@ -59,7 +59,7 @@ func (e *Executor) Submit(workers ...Worker) {
 }
 
 // ShutdownGracefully waits for completion of the submitted work and terminates worker goroutines
-// and frees allocated resources. The executor can no longer be used after this call.
+// and frees allocated resources. The executor can be no longer used after this call.
 func (e *Executor) ShutdownGracefully() {
 	// waits for completion of submitted work
 	e.Wait()

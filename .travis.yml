@@ -1,0 +1,11 @@
+language: go
+go:
+  - "1.12.x"
+
+before_install:
+  - GO111MODULE=off go get -u golang.org/x/lint/golint
+
+script:
+  - go test -v ./...
+  - go vet ./...
+  - golint -set_exit_status $(go list ./...)

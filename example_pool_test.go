@@ -16,56 +16,45 @@ import (
 // hashFactory factory function for hashes
 type hashFactory func() hash.Hash
 
-// hashInput contains all inputs needed to hash a single file
-type hashInput struct {
-	// file name
-	file string
-	// hash factory
-	hashFactory hashFactory
-}
-
-// hashOutput contains a hashing output or error
+// hashOutput contains a hashing output or an error
 type hashOutput struct {
-	hashInput
-	value []byte
-	err   error
+	file   string
+	length int
+	value  []byte
+	err    error
 }
 
-// hashWork hashes a single file according to the inputs
-type hashWork struct {
-	hashInput
-	out chan<- hashOutput
-}
+// hashWorkFactory creates a hash worker function for given file and given hashing algorithm
+func hashWorkFactory(file string, hashFactory hashFactory, out chan<- hashOutput) pool.WorkerFunc {
+	return func() {
+		h := hashFactory()
+		output := hashOutput{file: file, length: h.Size()}
+		f, err := os.Open(file)
+		if err != nil {
+			// propagates an error to the output and returns
+			output.err = err
+			out <- output
+			return
+		}
+		defer f.Close()
 
-// Work implements Worker interface
-// perform hashing and a result writes to the output channel
-func (hw hashWork) Work() {
-	output := hashOutput{hashInput: hw.hashInput}
-	f, err := os.Open(hw.file)
-	if err != nil {
-		// propagates an error to the output and returns
-		output.err = err
-		hw.out <- output
-		return
-	}
-	defer f.Close()
+		// creates an instance of hash
+		if _, err := io.Copy(h, f); err != nil {
+			// propagates an error to the output and returns
+			output.err = err
+			out <- output
+			return
+		}
+		// writes computed a hash to the output channel
+		output.value = h.Sum(nil)
+		out <- output
 
-	// creates an instance of hash
-	h := hw.hashFactory()
-	if _, err := io.Copy(h, f); err != nil {
-		// propagates an error to the output and returns
-		output.err = err
-		hw.out <- output
-		return
 	}
-	// writes computed a hash to the output channel
-	output.value = h.Sum(nil)
-	hw.out <- output
 }
 
 // Example demonstrates usage of the pool executor with the graceful shutdown and the result/error propagation,
 // The example iterates all files in the testdata directory.
-// For each file computes sha256, sha384 and sha512 hash
+// For each file computes sha256, sha384 and sha512 hash.
 func Example() {
 	// the output channel
 	output := make(chan hashOutput)
@@ -85,7 +74,7 @@ func Example() {
 				// submit a hash work for an execution
 				// for each file and each hash
 				file := filepath.Join(testDir, file.Name())
-				executor.Submit(hashWork{out: output, hashInput: hashInput{file: file, hashFactory: factory}})
+				executor.SubmitFunc(hashWorkFactory(file, factory, output))
 			}
 		}
 		// wait for the completion and shutdowns executor
@@ -101,7 +90,7 @@ func Example() {
 			fmt.Printf("hashing of %s failed: %+v\n", result.file, result.err)
 			continue
 		}
-		fmt.Printf("%s: %x (hash length: %d bytes)\n", filepath.Base(result.file), result.value, result.hashFactory().Size())
+		fmt.Printf("%s: %x (hash length: %d bytes)\n", filepath.Base(result.file), result.value, result.length)
 	}
 	// Output:
 	//1.txt: bf41cf94047f1a3443ca654a235bc8f830f7997da9b6f3b2b041a866bc6e3b6f (hash length: 32 bytes)
