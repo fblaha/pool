@@ -6,13 +6,12 @@
 This library/module provides goroutine pool executor with the completion wait support. 
 An executor that executes each submitted job using one of possibly several pooled goroutines.
 
-Download:
+#### Download
 ```shell
 go get github.com/fblaha/pool
 ```
 
-Usage:
-
+#### Usage
 An user has 2 options how to implement jobs:
 
 1. By type implementing Worker interface (`executor.Submit`) 
@@ -27,7 +26,7 @@ type Worker interface {
 type WorkerFunc func()
 ```
 
-Simple Example:
+#### Simple Example
 ```go
 // creates a new executor with a pool of 10 goroutines
 executor := NewExecutor(10)
@@ -64,7 +63,7 @@ executor.SubmitFunc(
 //easy work done
 ```
 
-Real Example:
+#### Real Example
  * godoc example https://godoc.org/github.com/fblaha/pool
  * demonstrates output channel for collecting results
  * demonstrates errors propagation via output channel
