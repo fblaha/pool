@@ -5,6 +5,14 @@
 
 This library/module provides goroutine pool executor with the completion wait support. 
 An executor that executes each submitted job using one of possibly several pooled goroutines.
+
+Download:
+```shell
+go get github.com/fblaha/pool
+```
+
+Usage:
+
 An user has 2 options how to implement jobs:
 
 1. By type implementing Worker interface (`executor.Submit`) 
@@ -18,14 +26,6 @@ type Worker interface {
 ```go
 type WorkerFunc func()
 ```
-
-
-Download:
-```shell
-go get github.com/fblaha/pool
-```
-
-* * *
 
 Simple Example:
 ```go
