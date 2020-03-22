@@ -67,17 +67,15 @@ func ExampleExecutor_SubmitFunc() {
 	//easy work done
 }
 
-func TestESubmit(t *testing.T) {
+func TestExecutorSubmitFunc(t *testing.T) {
 	executor := NewExecutor(10)
-	executor.SubmitFunc(
-		func() {
-			time.Sleep(1 * time.Second)
-			fmt.Println("jebat")
-
-		}, func() {
-			time.Sleep(5 * time.Second)
-			fmt.Println("gurnik")
-		})
+	var wg sync.WaitGroup
+	wg.Add(3)
+	fc := func() {
+		wg.Done()
+	}
+	executor.SubmitFunc(fc, fc, fc)
 	executor.Wait()
+	wg.Wait()
 	defer executor.ShutdownGracefully()
 }
